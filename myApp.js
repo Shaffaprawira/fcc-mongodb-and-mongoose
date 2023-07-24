@@ -1,54 +1,176 @@
-require('dotenv').config();
+require("dotenv").config();
+const mongoose = require("mongoose");
+const personSchema = require("./model/person");
+const { response } = require("express");
 
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 
-let Person;
+let Person = personSchema;
+
+arrayOfPeople = [
+  {
+    name: "Jane Fonda",
+    age: 84,
+    favoriteFoods: ["eggs", "fish", "fresh fruit"],
+  },
+  {
+    name: "Honda Sensei",
+    age: 70,
+    favoriteFoods: ["eggs", "chicken"],
+  },
+  {
+    name: "James",
+    age: 84,
+    favoriteFoods: ["fresh fruit", "cheese", "ham"],
+  },
+];
 
 const createAndSavePerson = (done) => {
-  done(null /*, data*/);
+  let person = new Person({
+    name: "Jane Fonda",
+    age: 84,
+    favoriteFoods: ["eggs", "fish", "fresh fruit"],
+  });
+  person.save((err, data) => {
+    if (err) {
+      console.log("an error occured");
+    }
+    done(null, data);
+  });
 };
 
 const createManyPeople = (arrayOfPeople, done) => {
-  done(null /*, data*/);
+  Person.create(arrayOfPeople, (err, data) => {
+    if (err) {
+      console.log("an error occured");
+    }
+    done(null, data);
+  });
 };
 
 const findPeopleByName = (personName, done) => {
-  done(null /*, data*/);
+  Person.find({ name: personName }, (err, data) => {
+    if (err) {
+      console.log("data not found");
+    }
+    done(null, data);
+  });
 };
 
 const findOneByFood = (food, done) => {
-  done(null /*, data*/);
+  Person.findOne({ favoriteFoods: food }, (err, data) => {
+    if (err) {
+      console.log("data not found");
+    }
+    done(null, data);
+  });
 };
 
 const findPersonById = (personId, done) => {
-  done(null /*, data*/);
+  Person.findById({ _id: personId }, (err, data) => {
+    if (err) {
+      console.log("data not found");
+    }
+    done(null, data);
+  });
 };
 
 const findEditThenSave = (personId, done) => {
   const foodToAdd = "hamburger";
-
-  done(null /*, data*/);
+  Person.findById({ _id: personId }, (err, person) => {
+    if (err) {
+      console.log("data not found");
+      return done(err);
+    }
+    person.favoriteFoods.push(foodToAdd);
+    person.save((err, foodUpdate) => {
+      if (err) {
+        console.log("failed to add food");
+        return done(err);
+      }
+      done(null, foodUpdate);
+    });
+    //done(null , data);
+  });
 };
 
 const findAndUpdate = (personName, done) => {
   const ageToSet = 20;
-
-  done(null /*, data*/);
+  Person.findOneAndUpdate(
+    { name: personName },
+    { age: ageToSet },
+    { new: true },
+    (err, person) => {
+      if (err) {
+        console.log("data not found");
+        return done(err);
+      }
+      person.save((err, ageUpdate) => {
+        if (err) {
+          console.log("failed to update age");
+          return done(err);
+        }
+        done(null, ageUpdate);
+      });
+      // done(null , data);
+    }
+  );
 };
 
 const removeById = (personId, done) => {
-  done(null /*, data*/);
+  Person.findByIdAndRemove({ _id: personId }, (err, removed) => {
+    if (err) {
+      console.log("data not found");
+      return done(err);
+    }
+    done(null, removed);
+    // removedPerson = person.indexOf(personId);
+    // if (removedPerson > -1) {
+    //   person.splice(removedPerson, 1);
+    // }
+    // person.save((err, removed) => {
+    //   if (err) {
+    //     console.log("failed to remove person");
+    //     return done(err);
+    //   }
+    //   done(null, removed);
+    // });
+  });
 };
 
 const removeManyPeople = (done) => {
   const nameToRemove = "Mary";
-
-  done(null /*, data*/);
+  Person.remove({ name: nameToRemove }, (err, removed) => {
+    if (err) {
+      console.log("data not found");
+      return done(err);
+    }
+    console.log(`data with name = ${nameToRemove} has been removed`);
+    done(null, removed);
+  });
 };
 
 const queryChain = (done) => {
   const foodToSearch = "burrito";
-
-  done(null /*, data*/);
+  Person.find({ favoriteFoods: foodToSearch }, (err, food) => {
+    if (err) {
+      console.log("data not found");
+    }
+    done(null, food);
+  })
+    .sort({ name: 1 })
+    .limit(2)
+    .select({ age: 0 })
+    .exec((err, food) => {
+      if (err) {
+        console.log("execution failed: ", err);
+        return done(err);
+      }
+      done(null, food);
+    });
 };
 
 /** **Well Done !!**
